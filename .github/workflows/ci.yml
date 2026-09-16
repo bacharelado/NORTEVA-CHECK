@@ -12,6 +12,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres@localhost:5432/norteva_test
       TEST_DATABASE_URL: postgresql://postgres@localhost:5432/norteva_test
+      SESSION_SECRET: ci-placeholder-secret-with-at-least-32-chars
     services:
       postgres:
         image: postgres:16

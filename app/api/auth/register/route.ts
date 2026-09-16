@@ -4,8 +4,12 @@ import { createSession } from "../../../../lib/auth";
 import { hashPassword } from "../../../../lib/password";
 import { prisma } from "../../../../lib/prisma";
 import { recordAudit } from "../../../../lib/audit";
+import { hasValidSameOrigin } from "../../../../lib/csrf";
 
 export async function POST(request: Request) {
+  if (!hasValidSameOrigin(request)) {
+    return NextResponse.json({ error: "Origem da requisição não permitida." }, { status: 403 });
+  }
   let body: Record<string, unknown>;
   try {
     body = await request.json();

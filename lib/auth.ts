@@ -68,10 +68,12 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
 export async function deleteCurrentSession() {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
-  if (token) {
-    await prisma.session.deleteMany({ where: { tokenHash: hashSessionToken(token) } });
-  }
+  if (token) await deleteSessionToken(token);
   cookieStore.delete(SESSION_COOKIE);
+}
+
+export async function deleteSessionToken(token: string) {
+  await prisma.session.deleteMany({ where: { tokenHash: hashSessionToken(token) } });
 }
 
 export function sessionTokenHash(token: string) {

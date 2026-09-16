@@ -37,6 +37,10 @@ O acesso inicial pode ser criado em `/login`. O cadastro cria uma organização 
 
 O aceite de autorização nesta fase registra usuário, organização, diagnóstico, escopo persistido, versão do termo, período e estado. Ele é um registro operacional rastreável e não representa uma assinatura digital ou uma conclusão jurídica.
 
+As rotas que alteram estado exigem cabeçalho `Origin` igual à origem da própria requisição. Ausência de `Origin` ou origem diferente resulta em `403`; isso complementa `SameSite=Lax` do cookie e reduz o risco de CSRF para a autenticação por cookie.
+
+O MVP ainda não possui rate limiting distribuído para login ou cadastro. A menor solução recomendada antes de exposição pública é aplicar limitação por IP e por identificador de conta em um proxy/edge ou datastore compartilhado, com respostas uniformes e backoff progressivo; não foi introduzida uma implementação local frágil nesta fase.
+
 `npm test` executa a suíte automatizada. Os testes de isolamento e autorização são executados quando `DATABASE_URL` e `TEST_DATABASE_URL` estão configuradas para um banco PostgreSQL de teste com as migrações aplicadas; sem essas variáveis, a suíte é explicitamente pulada.
 
 ## Status

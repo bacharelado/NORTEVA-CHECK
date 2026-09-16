@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "../../../../../lib/auth";
 import { authorizeDiagnosticForUser } from "../../../../../lib/store";
+import { hasValidSameOrigin } from "../../../../../lib/csrf";
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
+  if (!hasValidSameOrigin(request)) {
+    return NextResponse.json({ error: "Origem da requisição não permitida." }, { status: 403 });
+  }
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Autenticação necessária." }, { status: 401 });
 
