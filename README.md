@@ -31,7 +31,13 @@ O NORTEVA CHECK organiza uma avaliação autorizada da exposição digital e dos
 4. Aplique as migrações com `npm run db:migrate:dev` em desenvolvimento ou `npm run db:migrate:deploy` em um ambiente de deploy.
 5. Inicie a aplicação com `npm run dev`.
 
-O sistema exige `DATABASE_URL` para executar operações de persistência. O arquivo `.env.example` contém apenas placeholders; credenciais reais não devem ser versionadas.
+O sistema exige `DATABASE_URL` para executar operações de persistência e `SESSION_SECRET` para assinar o hash das sessões. O arquivo `.env.example` contém apenas placeholders; credenciais reais não devem ser versionadas.
+
+O acesso inicial pode ser criado em `/login`. O cadastro cria uma organização e associa o primeiro usuário como `OWNER`. Os papéis são mínimos: `OWNER` e `ADMIN` podem autorizar diagnósticos e criar findings; `MEMBER` pode consultar diagnósticos da própria organização. As rotas verificam o membership no backend.
+
+O aceite de autorização nesta fase registra usuário, organização, diagnóstico, escopo persistido, versão do termo, período e estado. Ele é um registro operacional rastreável e não representa uma assinatura digital ou uma conclusão jurídica.
+
+`npm test` executa a suíte automatizada. Os testes de isolamento e autorização são executados quando `DATABASE_URL` e `TEST_DATABASE_URL` estão configuradas para um banco PostgreSQL de teste com as migrações aplicadas; sem essas variáveis, a suíte é explicitamente pulada.
 
 ## Status
 

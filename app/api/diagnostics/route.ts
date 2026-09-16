@@ -1,28 +1,26 @@
 import { NextResponse } from "next/server";
-import { createCompanyAndDiagnostic, defaultScope } from "../../../lib/store";
+import { getCurrentUser } from "../../../lib/auth";
+import { createDiagnosticForUser, defaultScope } from "../../../lib/store";
 
 export async function POST(request: Request) {
-  let body: Record<string, unknown>;
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "Autenticação necessária." }, { status: 401 });
 
+  let body: Record<string, unknown>;
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Corpo JSON inválido." }, { status: 400 });
   }
 
-  const name = String(body.companyName ?? "").trim();
-  const contactName = String(body.contactName ?? "").trim();
-  const contactEmail = String(body.contactEmail ?? "").trim();
-  const contactPhone = String(body.contactPhone ?? "").trim();
-  const authorized = body.authorized === true;
-
-  if (!name || !authorized) {
-    return NextResponse.json({ error: "Empresa e autorização são obrigatórias." }, { status: 400 });
+  if (body.authorized !== true) {
+    return NextResponse.json({ error: "É necessário confirmar a solicitação do diagnóstico." }, { status: 400 });
   }
 
   try {
-    const { company, diagnostic } = await createCompanyAndDiagnostic({ name, contactName, contactEmail, contactPhone }, defaultScope);
-    return NextResponse.json({ company, diagnostic }, { status: 201 });
+    const result = await createDiagnosticForUser(user.id, defaultScope);
+    if (!result) return NextResponse.json({ error: "Usuário sem empresa associada." }, { status: 403 });
+    return NextResponse.json(result, { status: 201 });
   } catch (error) {
     console.error("Failed to create diagnostic", error);
     return NextResponse.json({ error: "Não foi possível criar o diagnóstico." }, { status: 500 });

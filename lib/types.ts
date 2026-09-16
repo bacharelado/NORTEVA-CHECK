@@ -29,6 +29,7 @@ export type Diagnostic = {
   status: CheckStatus;
   authorizedAt?: string;
   scope: string[];
+  scopeVersion: string;
   findings: Finding[];
   createdAt: string;
   updatedAt: string;

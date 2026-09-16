@@ -1,15 +1,18 @@
 import { FindingStatus, RiskLevel } from "@prisma/client";
 import { NextResponse } from "next/server";
-import { addFinding, getDiagnostic } from "../../../../../lib/store";
+import { getCurrentUser } from "../../../../../lib/auth";
+import { addFindingForUser } from "../../../../../lib/store";
 import { Finding } from "../../../../../lib/types";
 
 const riskLevels = new Set<RiskLevel>(["CRITICAL", "HIGH", "MEDIUM", "LOW", "OK"]);
 const findingStatuses = new Set<FindingStatus>(["OPEN", "MITIGATED", "ACCEPTED"]);
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "Autenticação necessária." }, { status: 401 });
+
   const { id } = await context.params;
   let body: Record<string, unknown>;
-
   try {
     body = await request.json();
   } catch {
@@ -32,16 +35,18 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     return NextResponse.json({ error: "Categoria, título, descrição, evidência, nível e recomendação válidos são obrigatórios." }, { status: 400 });
   }
 
-  const existing = await getDiagnostic(id);
-  if (!existing) return NextResponse.json({ error: "Diagnóstico não encontrado." }, { status: 404 });
-  if (existing.status === "DRAFT") {
-    return NextResponse.json({ error: "O diagnóstico precisa estar autorizado antes de receber findings." }, { status: 409 });
-  }
-
   try {
-    const diagnostic = await addFinding(id, finding);
-    if (!diagnostic) return NextResponse.json({ error: "Não foi possível incluir o finding." }, { status: 409 });
-    return NextResponse.json(diagnostic, { status: 201 });
+    const result = await addFindingForUser(user.id, id, finding);
+    if (result.kind === "not_found" || result.kind === "forbidden") {
+      return NextResponse.json({ error: "Diagnóstico não encontrado." }, { status: 404 });
+    }
+    if (result.kind === "invalid") {
+      return NextResponse.json({ error: "Nível ou status de finding inválido." }, { status: 400 });
+    }
+    if (result.kind === "invalid_state") {
+      return NextResponse.json({ error: "O diagnóstico não pode receber findings no estado atual." }, { status: 409 });
+    }
+    return NextResponse.json(result.diagnostic, { status: 201 });
   } catch (error) {
     console.error("Failed to add finding", error);
     return NextResponse.json({ error: "Não foi possível incluir o finding." }, { status: 500 });

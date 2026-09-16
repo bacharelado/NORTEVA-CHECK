@@ -1,19 +1,36 @@
-import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
-import { authorizeDiagnostic } from "../../../../../lib/store";
+import { getCurrentUser } from "../../../../../lib/auth";
+import { authorizeDiagnosticForUser } from "../../../../../lib/store";
 
-export async function POST(_: Request, context: { params: Promise<{ id: string }> }) {
+export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "Autenticação necessária." }, { status: 401 });
+
   const { id } = await context.params;
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Corpo JSON inválido." }, { status: 400 });
+  }
+
+  const termsVersion = String(body.termsVersion ?? "").trim();
+  const startsAt = body.startsAt ? new Date(String(body.startsAt)) : undefined;
+  const endsAt = body.endsAt ? new Date(String(body.endsAt)) : undefined;
+  if (!termsVersion || (startsAt && Number.isNaN(startsAt.getTime())) || (endsAt && Number.isNaN(endsAt.getTime()))) {
+    return NextResponse.json({ error: "Versão do termo e datas válidas são obrigatórias." }, { status: 400 });
+  }
 
   try {
-    const diagnostic = await authorizeDiagnostic(id);
-    if (!diagnostic) return NextResponse.json({ error: "Diagnóstico não encontrado." }, { status: 404 });
-    return NextResponse.json(diagnostic);
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+    const result = await authorizeDiagnosticForUser(user.id, id, termsVersion, startsAt, endsAt);
+    if (result.kind === "not_found" || result.kind === "forbidden") {
       return NextResponse.json({ error: "Diagnóstico não encontrado." }, { status: 404 });
     }
-
+    if (result.kind === "invalid_state") {
+      return NextResponse.json({ error: "O diagnóstico não pode ser autorizado no estado atual." }, { status: 409 });
+    }
+    return NextResponse.json(result);
+  } catch (error) {
     console.error("Failed to authorize diagnostic", error);
     return NextResponse.json({ error: "Não foi possível autorizar o diagnóstico." }, { status: 500 });
   }

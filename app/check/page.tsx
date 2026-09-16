@@ -25,6 +25,10 @@ export default function CheckPage() {
     });
     const data = await response.json();
     setLoading(false);
+    if (response.status === 401) {
+      window.location.href = "/login";
+      return;
+    }
     if (!response.ok) {
       setError(data.error ?? "Não foi possível criar o diagnóstico.");
       return;
@@ -51,13 +55,9 @@ export default function CheckPage() {
       <section style={{ maxWidth: 760, margin: "0 auto", paddingTop: 70 }}>
         <div className="kicker">NORTEVA CHECK</div>
         <h1 style={{ margin: "12px 0" }}>Solicitar diagnóstico</h1>
-        <p style={{ color: "var(--muted)", lineHeight: 1.7 }}>Preencha os dados da empresa. Nenhuma análise técnica será executada automaticamente; a etapa seguinte é definir e confirmar o escopo autorizado.</p>
+        <p style={{ color: "var(--muted)", lineHeight: 1.7 }}>A solicitação será criada para a empresa associada à sua sessão. Nenhuma análise técnica será executada automaticamente; a autorização formal depende de escopo, versão do termo e período registrados posteriormente.</p>
         <form className="panel" onSubmit={submit} style={{ marginTop: 28, display: "grid", gap: 14 }}>
-          <input name="companyName" required placeholder="Nome da empresa" />
-          <input name="contactName" placeholder="Responsável" />
-          <input name="contactEmail" type="email" placeholder="E-mail" />
-          <input name="contactPhone" placeholder="Telefone" />
-          <label style={{ display: "flex", gap: 10, alignItems: "flex-start", color: "var(--muted)", fontSize: 13, lineHeight: 1.5 }}><input name="authorized" type="checkbox" required />Confirmo que sou responsável ou estou autorizado a solicitar este diagnóstico para a empresa informada.</label>
+          <label style={{ display: "flex", gap: 10, alignItems: "flex-start", color: "var(--muted)", fontSize: 13, lineHeight: 1.5 }}><input name="authorized" type="checkbox" required />Confirmo que quero iniciar uma solicitação para a empresa associada à minha conta. Este aceite não é a autorização formal do diagnóstico.</label>
           {error && <div style={{ color: "#ff8c8c" }}>{error}</div>}
           <button className="btn primary" type="submit" disabled={loading}>{loading ? "Registrando..." : "Criar solicitação"}</button>
         </form>
