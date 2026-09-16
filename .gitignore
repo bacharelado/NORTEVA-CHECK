@@ -1,0 +1,12 @@
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+
+# Prisma local artifacts
+prisma/*.db
+prisma/*.db-journal

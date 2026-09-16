@@ -15,5 +15,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm install
+      - run: npm ci
+      - run: npm run db:generate
+      - run: DATABASE_URL='postgresql://USER:PASSWORD@HOST:5432/DATABASE?schema=public' npm run db:validate
       - run: npm run build

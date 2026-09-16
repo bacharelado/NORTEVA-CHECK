@@ -23,6 +23,16 @@ O NORTEVA CHECK organiza uma avaliação autorizada da exposição digital e dos
 - `prompts/` — prompts para análise e redação.
 - `scripts/` — automações auxiliares seguras.
 
+## Desenvolvimento local
+
+1. Instale as dependências com `npm ci`.
+2. Copie `.env.example` para `.env` e configure uma instância PostgreSQL local ou de desenvolvimento.
+3. Gere o cliente com `npm run db:generate`.
+4. Aplique as migrações com `npm run db:migrate:dev` em desenvolvimento ou `npm run db:migrate:deploy` em um ambiente de deploy.
+5. Inicie a aplicação com `npm run dev`.
+
+O sistema exige `DATABASE_URL` para executar operações de persistência. O arquivo `.env.example` contém apenas placeholders; credenciais reais não devem ser versionadas.
+
 ## Status
 
 **v0.1 — fundação do produto.**
